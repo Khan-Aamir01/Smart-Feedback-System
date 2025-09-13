@@ -1,0 +1,29 @@
+# Python cache / build files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.log
+
+# Virtual environment
+venv/
+env/
+
+# Model files (can be large!)
+models/
+*.pt
+*.bin
+
+# Temporary files
+temp_*.*
+*.wav
+*.mp3
+
+# IDE / editor settings
+.vscode/
+.idea/
+
+# OS-specific
+.DS_Store
+Thumbs.db
