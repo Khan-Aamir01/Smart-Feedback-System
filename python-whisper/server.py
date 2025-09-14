@@ -7,8 +7,7 @@ import torch
 app = FastAPI()
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-# Load model (use "tiny", "base", "small", "medium", or "large")
-model = whisper.load_model("medium")
+model = whisper.load_model("medium", device=device)
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile):
@@ -16,10 +15,17 @@ async def transcribe(file: UploadFile):
     with open(audio_path, "wb") as f:
         f.write(await file.read())
 
-    result = model.transcribe(audio_path, task="translate")  # "translate","transcribe" → English 
+    # Run both tasks
+    transcription = model.transcribe(audio_path, task="transcribe")  # original language
+    translation = model.transcribe(audio_path, task="translate")     # english
+
     os.remove(audio_path)
 
-    return {"text": result["text"]}
+    return {
+        "original": transcription["text"],
+        "translated": translation["text"]
+    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

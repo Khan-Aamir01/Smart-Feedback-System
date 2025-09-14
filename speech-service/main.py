@@ -7,9 +7,7 @@ import os
 
 app = FastAPI()
 
-
-SUPPORTED_FORMATS = [".wav", ".flac"]  # Formats that your backend can process
-
+SUPPORTED_FORMATS = [".wav", ".flac"]  # Native formats speech_recognition supports
 
 @app.post("/speech-to-text/")
 async def speech_to_text(file: UploadFile = File(...), language: str = Form(...)):
@@ -21,30 +19,29 @@ async def speech_to_text(file: UploadFile = File(...), language: str = Form(...)
     """
     try:
         ext = os.path.splitext(file.filename)[1].lower()
-        print(ext)
+        print(f"Uploaded file extension: {ext}")
 
         # Save uploaded file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
             tmp.write(await file.read())
             tmp_path = tmp.name
 
-        # If format not supported, convert to WAV
-        if ext not in SUPPORTED_FORMATS:
-            wav_tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-            wav_tmp_path = wav_tmp.name
-            wav_tmp.close()
+        # Always ensure it's proper PCM WAV
+        wav_tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+        wav_tmp_path = wav_tmp.name
+        wav_tmp.close()
 
-            # Let pydub detect format automatically
-            audio = AudioSegment.from_file(tmp_path)
-            audio.export(wav_tmp_path, format="wav")
+        audio = AudioSegment.from_file(tmp_path)
+        audio = audio.set_channels(1).set_frame_rate(16000)  # mono, 16kHz
+        audio.export(wav_tmp_path, format="wav", codec="pcm_s16le")
 
-            os.remove(tmp_path)  # Remove original file
-            tmp_path = wav_tmp_path
+        os.remove(tmp_path)  # Remove original uploaded file
+        tmp_path = wav_tmp_path
 
         # Process audio
         result = process_audio(tmp_path, language)
 
-        # Clean up temp file
+        # Clean up converted file
         os.remove(tmp_path)
 
         return result
@@ -55,4 +52,3 @@ async def speech_to_text(file: UploadFile = File(...), language: str = Form(...)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-
