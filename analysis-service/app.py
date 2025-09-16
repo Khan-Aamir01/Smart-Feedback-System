@@ -55,11 +55,18 @@ def extract_key_phrases_with_clause_sentiment(text: str):
 def analyze_feedback(request: FeedbackRequest):
     text = request.text
     overall_result = sentiment_pipeline(text)[0]
+    stars = int(overall_result["label"].split()[0])
+    # Convert score to percentage
+    overall_result_percent = {
+        "label": stars,
+        "score": round(overall_result["score"] * 100, 2)  # e.g., 0.85 -> 85.0
+    }
+
     aspects = extract_key_phrases_with_clause_sentiment(text)
 
     return {
         "input_text": text,
-        "overall_sentiment": overall_result,
-        "aspects_with_sentiment": aspects
+        "overall_sentiment": overall_result_percent,
+        #"aspects_with_sentiment": aspects
     }
 

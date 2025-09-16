@@ -3,7 +3,7 @@ import axios from "axios";
 import fs from "fs";
 import FormData from "form-data";
 
-const SPEECH_API = process.env.SPEECH_API || "http://localhost:8000/speech-to-text/";
+const SPEECH_API = process.env.SPEECH_API || "http://localhost:8080/speech-to-text/";
 
 export async function transcribeWithGoogle(filePath, language) {
   try {

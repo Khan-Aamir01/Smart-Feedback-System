@@ -9,28 +9,17 @@ app.use(express.json());
 const FASTAPI_ANALYZE_URL = "http://127.0.0.1:8000/analyze";
 
 // Node.js endpoint to forward text to FastAPI
-app.post("/send-to-analyze", async (req, res) => {
-  const { text } = req.body;
-
-  if (!text) {
-    return res.status(400).json({ message: "Text is required" });
-  }
-
-  try {
+export async function analyseSentiment({ text }) {
+  try{
     // Forward the text to FastAPI
     const response = await axios.post(FASTAPI_ANALYZE_URL, { text });
-
-    // Send back the FastAPI response to the client
-    return res.json(response.data);
-  } catch (error) {
-    console.error("Error calling FastAPI:", error.message);
-    return res.status(500).json({ message: "Analysis failed", error: error.message });
+    console.log(response.data);
+    return response.data;
+  }catch (err) {
+    console.error("Speech service error:", err.message);
+    throw new Error("Speech service transcription failed");
   }
-});
+}
 
-// Start the Node.js server
-const PORT = 5000;
-app.listen(PORT, () => {
-  console.log(`Node.js Analysis API running on http://localhost:${PORT}`);
-});
+
 
