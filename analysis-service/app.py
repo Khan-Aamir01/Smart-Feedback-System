@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from transformers import pipeline
+import uvicorn
 import spacy
 import re
 
@@ -69,4 +70,5 @@ def analyze_feedback(request: FeedbackRequest):
         "overall_sentiment": overall_result_percent,
         #"aspects_with_sentiment": aspects
     }
-
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="127.0.0.1", port=8080, reload=True)

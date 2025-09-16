@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 
 // URL of your FastAPI analyze endpoint
-const FASTAPI_ANALYZE_URL = "http://127.0.0.1:8000/analyze";
+const FASTAPI_ANALYZE_URL = "http://127.0.0.1:8080/analyze";
 
 // Node.js endpoint to forward text to FastAPI
 export async function analyseSentiment({ text }) {

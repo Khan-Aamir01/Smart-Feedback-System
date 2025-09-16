@@ -49,7 +49,7 @@ app.post("/upload", upload.single("audio"), async (req, res) => {
     } else {
       transcription = await transcribeWithWhisper(req.file.path);
     }
-    //console.log('Translated Text : '+ transcription.translated);
+    console.log('Translated Text : '+ transcription.translated);
 
     // 2️⃣ Save metadata in Supabase
     const { data: metaData, error: metaError } = await supabase
@@ -108,5 +108,41 @@ app.post("/upload", upload.single("audio"), async (req, res) => {
   }
 });
 
+// GET /sentiments
+app.get("/sentiments", async (req, res) => {
+  try {
+    // Fetch feedback-data joined with audio-metadata
+    const { data, error } = await supabase
+      .from("feedback-data")
+      .select(`
+        id,
+        audio_id,
+        rating,
+        confidence,
+        audio_metadata:audio-metadata (
+          translated_text
+        )
+      `);
+
+    if (error) {
+      console.error("Supabase fetch error:", error);
+      return res.status(500).json({ message: "Failed to fetch sentiments", error });
+    }
+
+    // Map to a cleaner shape
+    const sentiments = data.map((item) => ({
+      id: item.id,
+      audio_id: item.audio_id,
+      rating: item.rating,
+      confidence: item.confidence,
+      translated_text: item.audio_metadata?.translated_text || null,
+    }));
+
+    return res.json(sentiments);
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
 
 app.listen(PORT, () => console.log(`✅ Backend running on http://localhost:${PORT}`));
