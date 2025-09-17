@@ -13,7 +13,7 @@ import { supabase } from "./supabaseClient.js";
 import { transcribeWithGoogle } from "./googleService.js";
 import { transcribeWithWhisper } from "./whisperService.js";
 
-import {analyseSentiment} from "./analysisService.js";
+import { analyseSentiment } from "./analysisService.js";
 
 dotenv.config();
 
@@ -40,6 +40,7 @@ const upload = multer({ storage });
 app.post("/upload", upload.single("audio"), async (req, res) => {
   if (!req.file) return res.status(400).json({ message: "No audio received" });
   const { language } = req.body;
+  console.log("audio path is :" + req.file.path);
 
   try {
     // 1️⃣ Call the selected AI service
@@ -49,7 +50,6 @@ app.post("/upload", upload.single("audio"), async (req, res) => {
     } else {
       transcription = await transcribeWithWhisper(req.file.path);
     }
-    console.log('Translated Text : '+ transcription.translated);
 
     // 2️⃣ Save metadata in Supabase
     const { data: metaData, error: metaError } = await supabase
@@ -73,6 +73,9 @@ app.post("/upload", upload.single("audio"), async (req, res) => {
 
     const audioId = metaData[0].id;
     const textToAnalyze = transcription.translated;
+    if (!textToAnalyze) {
+      return res.status(400).json({ message: "No text available for sentiment analysis" });
+    }
     //console.log("The Text that is going for analysis :" + textToAnalyze);
 
     // 3️⃣ Send translated text to Analysis API
@@ -85,8 +88,8 @@ app.post("/upload", upload.single("audio"), async (req, res) => {
       .insert([
         {
           audio_id: audioId,
-          rating : rating,
-          confidence : confidence,
+          rating: rating,
+          confidence: confidence,
         },
       ])
       .select();
